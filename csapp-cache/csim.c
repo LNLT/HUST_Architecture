@@ -157,7 +157,7 @@ void findData(long int addr)
         { //无空位置
             int lru = cache.group[group_num].lines[0].lru;
             int max = 0;
-            for (int j = 0; j < E; j++) //找lru最小时的位置
+            for (int j = 0; j < E; j++) //找lru最大时的位置
             {
                 if (cache.group[group_num].lines[j].lru > lru)
                 {
