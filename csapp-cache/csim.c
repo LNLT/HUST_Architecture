@@ -4,12 +4,12 @@
 #include "stdio.h"
 #include "string.h"
 #include "math.h"
-#include "getopt.h"//需要加入，否则make报错
+#include "getopt.h" //需要加入，否则make报错
 typedef struct
 {
     int valid;
     int tag;
-    int lru;//每次替换lru最大的，每次命中或者进来的lru=0，其余有效的lru+1；
+    int lru; //每次替换lru最大的，每次命中或者进来的lru=0，其余有效的lru+1；
     //如果采用替换lru最小的，需要将进来的lru设成最大的，其余有效的lru-1；
     //不能采用进来的lru=0，命中的lru+1，每次替换最大的。
 } Line;
@@ -65,7 +65,6 @@ int main(int argc, char **argv)
             t = optarg;
             break;
         default:
-            printf("default\n");
             printhelp();
             break;
         }
@@ -76,13 +75,13 @@ int main(int argc, char **argv)
         printhelp();
         exit(1);
     }
-    initCache();//初始化构造cache
-    read_opt(t);//读取文件里的命令并执行
-	for(int i=0;i<(int)pow(2,s);i++)	
-	{
+    initCache(); //初始化构造cache
+    read_opt(t); //读取文件里的命令并执行
+    for (int i = 0; i < (int)pow(2, s); i++)
+    {
         free(cache.group[i].lines);
-	}
-	free(cache.group);
+    }
+    free(cache.group);
     printSummary(hit_count, miss_count, eviction_count);
     return 0;
 }
@@ -103,8 +102,8 @@ void printhelp()
 
 void initCache() //初始化cache
 {
-    cache.group = (Group *)malloc(sizeof(Group) * (int)pow(2,s));
-    for (int i = 0; i < (int)pow(2,s); i++)
+    cache.group = (Group *)malloc(sizeof(Group) * (int)pow(2, s));
+    for (int i = 0; i < (int)pow(2, s); i++)
     {
         cache.group[i].lines = (Line *)malloc(sizeof(Line) * E);
         for (int j = 0; j < E; j++)
@@ -127,24 +126,27 @@ void findData(long int addr)
         if (cache.group[group_num].lines[i].tag == addr_tag && cache.group[group_num].lines[i].valid == 1) //命中
         {
             hit_count++;
-            printf("hit ");
-            cache.group[group_num].lines[i].lru=0; //lru清零
+            if (v == 1)
+                printf("hit ");
+            cache.group[group_num].lines[i].lru = 0; //lru清零
             hit_flag = 1;
         }
-        else if (cache.group[group_num].lines[i].valid == 1){//其余的lru自增1
+        else if (cache.group[group_num].lines[i].valid == 1)
+        { //其余的lru自增1
             cache.group[group_num].lines[i].lru++;
         }
     }
     if (hit_flag == 0) //不命中
     {
         miss_count++;
-        printf("miss ");
-        int avail_flag = 0;//标志位：是否查找到空位置
+        if (v == 1)
+            printf("miss ");
+        int avail_flag = 0;         //标志位：是否查找到空位置
         for (int j = 0; j < E; j++) //寻找放入位置,有空位置
         {
             if (cache.group[group_num].lines[j].valid == 0) //无效说明为空闲位置
             {
-                avail_flag = 1;//已经查找到空位置
+                avail_flag = 1; //已经查找到空位置
                 cache.group[group_num].lines[j].valid = 1;
                 cache.group[group_num].lines[j].lru = 0;
                 cache.group[group_num].lines[j].tag = addr_tag;
@@ -166,7 +168,8 @@ void findData(long int addr)
             cache.group[group_num].lines[max].valid = 1;
             cache.group[group_num].lines[max].lru = 0;
             cache.group[group_num].lines[max].tag = addr_tag;
-            printf("eviction ");
+            if (v == 1)
+                printf("eviction ");
             eviction_count++;
         }
     }
@@ -180,25 +183,31 @@ void read_opt(char *filename)
     int off;
     while (fscanf(file, "%c %lx,%d", &opt, &addr, &off) != EOF)
     {
-        if (opt == 'S')//判断命令
+        if (opt == 'S') //判断命令
         {
-            printf("S %lx,%d ", addr, off);
+            if (v == 1)
+                printf("S %lx,%d ", addr, off);
             findData(addr);
-            printf("\n");
+            if (v == 1)
+                printf("\n");
         }
         else if (opt == 'L')
         {
-            printf("L %lx,%d ", addr, off);
+            if (v == 1)
+                printf("L %lx,%d ", addr, off);
             findData(addr);
-            printf("\n");
+            if (v == 1)
+                printf("\n");
         }
         else if (opt == 'M')
         {
-            printf("M %lx,%d ", addr, off);
+            if (v == 1)
+                printf("M %lx,%d ", addr, off);
             findData(addr);
             findData(addr);
-            printf("\n");
+            if (v == 1)
+                printf("\n");
         }
+        
     }
 }
-
