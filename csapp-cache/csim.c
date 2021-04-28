@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "math.h"
-#include "getopt.h"
+#include "getopt.h"//需要加入，否则make报错
 typedef struct
 {
     int valid;
@@ -21,13 +21,71 @@ typedef struct
 {
     Group *group;
 } Cache;
-
+void printhelp();
+void initCache();
+void findData(long int addr);
+void read_opt(char *filename);
 int s = 0, E = 0, b = 0, v = 0; //组数位数、行数、块大小位数,现式轨迹信息
 char *t = NULL;
 int miss_count = 0;
 int hit_count = 0;
 int eviction_count = 0;
 Cache cache;
+
+int main(int argc, char **argv)
+{
+    int c;
+    // -h: 显示帮助信息（可选）
+    // -v: 显示轨迹信息（可选）
+    // -s: 组索引位数
+    // -E: 关联度（每组包含的缓存行数）
+    // -b: 内存块内地址位数
+    // -t <tracefile>: 内存访问轨迹文件名
+    while ((c = getopt(argc, argv, "hvs:E:b:t:")) != -1)
+    {
+        switch (c)
+        {
+        case 'h':
+            printf("help\n");
+            printhelp();
+            break;
+        case 'v':
+            v = 1;
+            break;
+        case 's':
+            s = atoi(optarg);
+            break;
+        case 'E':
+            E = atoi(optarg);
+            break;
+        case 'b':
+            b = atoi(optarg);
+            break;
+        case 't':
+            t = optarg;
+            break;
+        default:
+            printf("default\n");
+            printhelp();
+            break;
+        }
+    }
+    if (s == 0 || E == 0 || b == 0 || t == NULL)
+    {
+        printf("%s: Missing required command line argument\n", argv[0]);
+        printhelp();
+        exit(1);
+    }
+    initCache();//初始化构造cache
+    read_opt(t);//读取文件里的命令并执行
+	for(int i=0;i<(int)pow(2,s);i++)	
+	{
+        free(cache.group[i].lines);
+	}
+	free(cache.group);
+    printSummary(hit_count, miss_count, eviction_count);
+    return 0;
+}
 
 void printhelp()
 {
@@ -70,10 +128,10 @@ void findData(long int addr)
         {
             hit_count++;
             printf("hit ");
-            cache.group[group_num].lines[i].lru=0; //lur清零
+            cache.group[group_num].lines[i].lru=0; //lru清零
             hit_flag = 1;
         }
-        else if (cache.group[group_num].lines[i].valid == 1){
+        else if (cache.group[group_num].lines[i].valid == 1){//其余的lru自增1
             cache.group[group_num].lines[i].lru++;
         }
     }
@@ -81,12 +139,12 @@ void findData(long int addr)
     {
         miss_count++;
         printf("miss ");
-        int avail_flag = 0;
+        int avail_flag = 0;//标志位：是否查找到空位置
         for (int j = 0; j < E; j++) //寻找放入位置,有空位置
         {
             if (cache.group[group_num].lines[j].valid == 0) //无效说明为空闲位置
             {
-                avail_flag = 1;
+                avail_flag = 1;//已经查找到空位置
                 cache.group[group_num].lines[j].valid = 1;
                 cache.group[group_num].lines[j].lru = 0;
                 cache.group[group_num].lines[j].tag = addr_tag;
@@ -114,7 +172,7 @@ void findData(long int addr)
     }
 }
 
-void readFile(char *filename)
+void read_opt(char *filename)
 {
     FILE *file = fopen(filename, "r");
     char opt[5];
@@ -122,7 +180,7 @@ void readFile(char *filename)
     int off;
     while (fscanf(file, "%s %lx,%d", opt, &addr, &off) != EOF)
     {
-        if (strstr(opt, "S") != NULL)
+        if (strstr(opt, "S") != NULL)//判断命令
         {
             printf("S %lx,%d ", addr, off);
             findData(addr);
@@ -143,51 +201,4 @@ void readFile(char *filename)
         }
     }
 }
-int main(int argc, char **argv)
-{
-    int c;
-    while ((c = getopt(argc, argv, "hvs:E:b:t:")) != -1)
-    {
-        switch (c)
-        {
-        case 'h':
-            printf("help\n");
-            printhelp();
-            break;
-        case 'v':
-            v = 1;
-            break;
-        case 's':
-            s = atoi(optarg);
-            break;
-        case 'E':
-            E = atoi(optarg);
-            break;
-        case 'b':
-            b = atoi(optarg);
-            break;
-        case 't':
-            t = optarg;
-            break;
-        default:
-            printf("default\n");
-            printhelp();
-            break;
-        }
-    }
-    if (s == 0 || E == 0 || b == 0 || t == NULL)
-    {
-        printf("%s: Missing required command line argument\n", argv[0]);
-        printhelp();
-        exit(1);
-    }
-    initCache();
-    readFile(t);
-	for(int i=0;i<(int)pow(2,s);i++)	
-	{
-        free(cache.group[i].lines);
-	}
-	free(cache.group);
-    printSummary(hit_count, miss_count, eviction_count);
-    return 0;
-}
+
