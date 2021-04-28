@@ -1,2 +1,3 @@
 make
-./csim -v -s 2 -E 2 -b 3 -t traces/trans.trace
+./csim-ref -v -s 4 -E 1 -b 4 -t traces/yi.trace
+./csim -v -s 4 -E 1 -b 4 -t traces/yi.trace
