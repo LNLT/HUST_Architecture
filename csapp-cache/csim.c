@@ -175,24 +175,24 @@ void findData(long int addr)
 void read_opt(char *filename)
 {
     FILE *file = fopen(filename, "r");
-    char opt[5];
+    char opt;
     long int addr;
     int off;
-    while (fscanf(file, "%s %lx,%d", opt, &addr, &off) != EOF)
+    while (fscanf(file, "%c %lx,%d", &opt, &addr, &off) != EOF)
     {
-        if (strstr(opt, "S") != NULL)//判断命令
+        if (opt == 'S')//判断命令
         {
             printf("S %lx,%d ", addr, off);
             findData(addr);
             printf("\n");
         }
-        else if (strstr(opt, "L") != NULL)
+        else if (opt == 'L')
         {
             printf("L %lx,%d ", addr, off);
             findData(addr);
             printf("\n");
         }
-        else if (strstr(opt, "M") != NULL)
+        else if (opt == 'M')
         {
             printf("M %lx,%d ", addr, off);
             findData(addr);
